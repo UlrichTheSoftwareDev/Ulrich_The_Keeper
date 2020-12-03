@@ -114,7 +114,16 @@ electron-packager . electron-tutorial-app --overwrite --asar=true --platform=win
 #OU FAIRE TOURNER LES SOURCES AUTRES PART
 ####
 
-#LINUX
+#LINUX source git hub
+Il faut install nodejs 14.
+git clone https://github.com/UlrichTheKeeper/UTK_password_manager.git
+cd UTK_password_manager
+npm install
+npm postinstall
+npm start
+
+
+#LINUX source + node_modules directory
 Aller sur un os linux neuf.
 Ubuntu 20 OK
 en etant un user normal et non root.
@@ -129,7 +138,7 @@ il faut seulement le forcer quand on fait tourner electron en root.
 De toute façon de base electron est sans la sandbox mais quand on est en root c'est une securité de bien forcer le no-sandbox car faire tourner l'app en root peut etre encore plus dangeureux.
 #
 
-#WINDOWS
+#WINDOWS source + node_modules directory
 ATTENTION : ça fonctionne, meme avec sqlite3 mais le truc c'est que pour l'instant avec le bug actuel de require 2 fois sqlite et du coup j'ai un écran blanc, mon petit hack (de mettre 2 fois db.close) ne marche pas sur windows et du coup dés le début j'ai un écran blanc
 
 Install visual studio c++ ???
@@ -169,3 +178,29 @@ OK mais voir test sur le long terme : voir si les lib pour tableau son toute ind
 j'ai essayer plein d'autre methode pour refresh data etc. mais fonctionne uniquement pour list les data mais quand je veux avoir les indices marche pas ...  meme quand je veux hide and show une column dynamiquement. En gros soit j'ai les data et pas les indices, soit j'ai les indices mais pas les data a jours surtout quand j'insert des data et ensuite que je search
 
 - FONCTIONNE PAS : SQLIETE 3 REQUIRE 2 FOIS DANS 2 FICHIER DIFFERENT-> TJR LE MEME BUG, JAI ESSAYER AVEC DES REQUETES SIMPLE AVEC SERIALIZE BD.EACH ET AUTRE : essayer utiliser autre methode pour select et insert data sqlite3 ne pas utilser db.all()
+
+
+######
+#Bonne pratique git
+#####
+git clone https://github.com/UlrichTheKeeper/UTK_password_manager.git
+10128  git log
+10139  git add README.md
+10140  git commit -m "init readme"
+10141  git branch
+10142  git push
+10143  git checkout -b dev
+10144  git branch
+10145  git push origin dev
+10146  git branch
+10147  git add src/
+10148  git commit -m "add init src"
+10149  git add Dockerfile
+10150  git commit -m "add init dockerfile"
+10151  git add package*
+10152  git status
+10153  git commit -m "add init package"
+10154  git push origin dev
+10155  git checkout master
+10156  git status
+10157  git pull
