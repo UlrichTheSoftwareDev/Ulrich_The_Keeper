@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ulrich The Keeper</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ionicons/2.0.1/css/ionicons.min.css">
+
+
+  <link rel="stylesheet" href="../assets/css/login_style.css">
+
+</head>
+
+<body>
+  <div class="login-dark">
+    <form id="myForm_register" method="POST" oninput='password_check.setCustomValidity(password_check.value != password.value ? "Passwords do not match." : "")'>
+      <h2 class="sr-only">Register Form</h2>
+      <div class="illustration"><i class="icon ion-ios-locked-outline"></i></div>
+      <div class="form-group"><input id=login class="form-control" type="text" name="login" placeholder="Login" required></div>
+      <div class="form-group"><input id=password class="form-control" type="password" name="password" placeholder="Your Password" aria-describedby="PasswordHelp" required
+          title="Must contain at least one number and one uppercase and lowercase letter, and at least 12 or more characters"></div>
+      <div class="form-group"><input id=password_check class="form-control" type="password" name="password_check" placeholder="Check Password" aria-describedby="PasswordHelp" required></div>
+
+      <div class="form-group">
+        <button id=myBtn class="btn btn-primary btn-block" type="button">Log In</button>
+      </div>
+      <a href="index.html" class="forgot">Already registered ? Click here for back to Login page </a>
+
+    </form>
+  </div>
+
+
+
+  <!-- Placing scripts at the bottom of the <body> element improves the display speed, because script interpretation slows down the display. -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/js/bootstrap.bundle.min.js"></script>
+
+  <script src="../../mvc/model/database_function.js"></script>
+  <script src="../../mvc/controller/register.js"></script>
+
+
+
+  <script>
+    document.getElementById("myBtn").addEventListener("click", registration);
+
+    // // pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{12,}"
+  </script>
+
+</body>
+
+</html>
