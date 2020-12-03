@@ -1,6 +1,4 @@
-########
 #DOCUMENTATION
-########
 
 #gros problème pour faire tourner l'app autre que root dans un container mais les soluces que j'ai vu
 #sur le net ne fonctionne pas -> problème connu
