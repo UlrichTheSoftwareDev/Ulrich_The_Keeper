@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ulrich The Keeper</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ionicons/2.0.1/css/ionicons.min.css">
+
+
+  <link rel="stylesheet" href="../assets/css/login_style.css">
+
+</head>
+
+<body>
+
+  <div class="login-dark">
+    <form id="myForm_index" method="POST">
+      <h2 class="sr-only">Login Form</h2>
+      <div class="illustration"><i class="icon ion-ios-locked-outline"></i></div>
+      <div class="form-group"><input id=form_index_login class="form-control" type="text" name="login" placeholder="Login" required></div>
+      <div class="form-group"><input id=form_index_password class="form-control" type="password" name="password" placeholder="Password" aria-describedby="PasswordHelp" required></div>
+      <small id="PasswordHelp" class="form-text text-muted">Enter your credentials to unlock your vault </small>
+
+      <div class="form-group">
+        <button id=myBtn class="btn btn-primary btn-block" type="button">Log In</button>
+      </div>
+
+      <a href="register.html" class="forgot">Click here to register</a>
+
+    </form>
+  </div>
+
+
+  <!-- Placing scripts at the bottom of the <body> element improves the display speed, because script interpretation slows down the display. -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/js/bootstrap.bundle.min.js"></script>
+
+  <script src="../../mvc/model/database_function.js"></script>
+  <script src="../../mvc/controller/index.js"></script>
+
+  <script>
+    document.getElementById("myBtn").addEventListener("click", login_index);
+
+  </script>
+
+
+</body>
+
+</html>

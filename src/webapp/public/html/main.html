@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ulrich The Keeper</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="../assets/css/main_style.css">
+
+  <!-- table lib -->
+  <link rel="stylesheet" href="../../../../node_modules/datatables.net-dt/css/jquery.dataTables.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+<!-- table lib utile ? premier test non -->
+  <!-- <link rel="stylesheet" href="https://cdn.datatables.net/1.10.22/css/dataTables.bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/scroller/2.0.3/css/scroller.bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.10.22/css/jquery.dataTables.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/select/1.3.1/css/select.dataTables.min.css">
+<link type="text/css" href="https://gyrocode.github.io/jquery-datatables-checkboxes/1.2.12/css/dataTables.checkboxes.css" rel="stylesheet" /> -->
+
+
+
+</head>
+
+<body>
+  <!-- Vertical navbar -->
+  <div class="vertical-nav bg-white" id="sidebar">
+    <div class="py-4 px-3 mb-4 bg-light">
+      <div class="media d-flex align-items-center"><img src="../assets/img/main_icon.png" alt="..." width="65" class="mr-3 rounded-circle img-thumbnail shadow-sm">
+        <div class="media-body">
+          <h4 class="m-0">Ulrich</h4>
+          <p class="font-weight-light text-muted mb-0">The Keeper</p>
+        </div>
+      </div>
+    </div>
+
+    <p class="text-gray font-weight-bold text-uppercase px-3 small pb-4 mb-0">Main</p>
+
+    <ul class="nav flex-column bg-white mb-0">
+      <li class="nav-item">
+        <a href="#" onclick=search_password() class="nav-link text-dark font-italic bg-light">
+          <i class="fa fa-th-large mr-3 text-primary fa-fw"></i>
+          Search
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="#" onclick=form_hide_show_generate() class="nav-link text-dark font-italic">
+          <i class="fa fa-address-card mr-3 text-primary fa-fw"></i>
+          Generate
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="#" onclick=form_hide_show() class="nav-link text-dark font-italic">
+          <i class="fa fa-cubes mr-3 text-primary fa-fw"></i>
+          Input
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="#" onclick=logout() class="nav-link text-dark font-italic">
+          <i class="fa fa-sign-out mr-3 text-primary fa-fw"></i>
+          Logout
+        </a>
+
+      </li>
+    </ul>
+
+  </div>
+  <!-- End vertical navbar -->
+
+
+  <!-- Page content holder -->
+  <div class="page-content p-5" id="content">
+    <!-- Toggle button -->
+    <button id="sidebarCollapse" type="button" class="btn btn-light bg-white rounded-pill shadow-sm px-4 mb-4"><i class="fa fa-bars mr-2"></i><small class="text-uppercase font-weight-bold">Toggle</small></button>
+
+    <!-- Demo content -->
+    <h2 class="display-4 text-white">Your passwords</h2>
+
+    <div class="row text-white">
+      <p id="select"> Click on Search, Generate or Input </p>
+
+    </div>
+
+    <div class="row text-white">
+      <p id="organisation"></p>
+    </div>
+
+    <div class="separator"></div>
+
+    <div class="row text-white">
+
+
+      <p id="table_data"></p>
+
+      <form id="myForm_index" method="POST">
+
+        <div id="input_email" class="form-group" hide>
+          <label for="input_email_value">Email:</label>
+          <input id="input_email_value" type="text" class="form-control" required>
+        </div>
+        <div id="input_organisation" class="form-group" hide>
+          <label for="input_organisation_value">Organisation:</label>
+          <input type="text" class="form-control" id="input_organisation_value" required>
+        </div>
+        <div id="input_password" class="form-group" hide>
+          <label for="input_password_value">Password:</label>
+          <input type="password" class="form-control" id="input_password_value" required>
+        </div>
+        <div id="insert_button" class="form-group" hide>
+          <button id=myBtn_insert class="btn btn-primary btn-block" type="button">Submit</button>
+        </div>
+      </form>
+
+      <form id="myForm_index_generate" method="POST">
+
+        <div id="generate_email" class="form-group" hide>
+          <label for="generate_email_value">Email:</label>
+          <input id="generate_email_value" type="text" class="form-control" required>
+        </div>
+        <div id="generate_organisation" class="form-group" hide>
+          <label for="generate_organisation_value">Organisation:</label>
+          <input type="text" class="form-control" id="generate_organisation_value" required>
+        </div>
+
+        <div id="insert_button" class="form-group" hide>
+          <button id=myBtn_generate class="btn btn-primary btn-block" type="button">Submit</button>
+        </div>
+
+
+      </form>
+
+
+    </div>
+
+      <table id="table_id" class="table table-striped table-bordered nowra" width="100%">
+
+      </table>
+
+
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<!-- table lib js utile ? premier test non -->
+<!-- <script src="../../../../node_modules/datatables.net-dt/js/dataTables.dataTables.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+<script src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.22/js/dataTables.bootstrap.min.js"></script>
+<script src="https://cdn.datatables.net/scroller/2.0.3/js/dataTables.scroller.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/select/1.3.1/js/dataTables.select.min.js"></script>
+<script type="text/javascript" src="https://gyrocode.github.io/jquery-datatables-checkboxes/1.2.12/js/dataTables.checkboxes.min.js"></script> -->
+
+
+
+  <script src="../../mvc/model/database_function.js"></script>
+  <script src="../../mvc/controller/main.js"></script>
+
+  <script>
+    document.getElementById("myBtn_insert").addEventListener("click", submit_insert_password);
+    document.getElementById("myBtn_generate").addEventListener("click", submit_generate_password);
+
+    document.getElementById("myBtn_generate").addEventListener("click", form_hide_show);
+    document.getElementById("myBtn_generate").addEventListener("click", form_hide_show_generate);
+
+    document.getElementById("myForm_index").style.display = "none";
+    document.getElementById("myForm_index_generate").style.display = "none";
+
+    //load lib for table content form
+    window.jQuery = window.$ = require('jquery');
+    require( 'datatables.net-dt' )();
+
+
+
+  </script>
+
+</body>
+
+</html>
+<!-- End demo content -->
