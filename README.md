@@ -3,7 +3,7 @@
 
 ## About the project
 
-Ulrich The Keeper is a lightweight desktop password manager made with ElectronJs Framework.
+Ulrich The Keeper is a lightweight multi-users desktop password manager made with ElectronJs Framework.
 
 You can view, generate and input password.
 
