@@ -1,4 +1,4 @@
-# DOCUMENTATION <img src="src/webapp/public/assets/img/main_icon.png" width=150 />
+# DOCUMENTATION <img src="src/webapp/public/assets/img/main_icon.png" width=50 />
 
 
 ## About the project
