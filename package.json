@@ -1,7 +1,7 @@
 {
   "name": "ulrich_the_keeper",
   "version": "1.0.0",
-  "description": "Ulrich The Keeper is a multi user password manager -> view, generate, input ",
+  "description": "Ulrich The Keeper is a multi-users password manager -> view, generate, input ",
   "main": "./src/server/main.js",
   "scripts": {
     "postinstall": "install-app-deps",
