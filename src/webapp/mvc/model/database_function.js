@@ -1,25 +1,25 @@
-//Error Sqlite3
-//si je require 2 fois sqlite 3 = error page blanche dés que je require
-//le truc j'ai reussi a pseudo regler en forcant le db.close dans l'index
-//mais de base j'ai l'impression que ça close pas la database du coup je met 2 db.close pour clore la databases
-//mais ça me met une error dans la console
-//je ne sais pas comment regler ça car : j'ai limpression que si je met pas 2 fois db.close la connection database ne se close pas et d'une autre part dés que je require sqlite3 j'a iune page blanche sans aucun message error et j'ai aucun moyen de savoir
-
+//register.html -> registration
 function insert_user(form_user, form_password) {
-
   //require lib
   var bcrypt = require('bcryptjs');
   var db_config = require('../../../server/database_config.js');
   const remote = require('electron').remote;
+  const low = require('lowdb')
+  const FileSync = require('../../../../node_modules/lowdb/adapters/FileSync.js')
+  const lodashId = require('lodash-id')
 
-  //import sqlite3
-  var sqlite3 = require('sqlite3').verbose();
-
-  //get sqlite3 db path
+  //get db path
   var db_path = db_config.db_path;
 
-  //create sqlite3 database if not exist
-  var db = new sqlite3.Database(db_path);
+  //lowdb init db config
+  const adapter = new FileSync(db_path)
+  const db = low(adapter)
+  db._.mixin(lodashId)
+
+  //init db schema and get users schema
+  const collection = db
+    .defaults({ users: [], passwords:[] })
+    .get('users')
 
   //format date to string
   var today = new Date();
@@ -40,41 +40,57 @@ function insert_user(form_user, form_password) {
   //format hash password to string
   var form_password_string_hash = String(form_password_hash);
 
-  let sql = "INSERT INTO users(username,user_password,date_user) VALUES (?,?,?) "
-  db.all(sql, [form_user_string_replace, form_password_string_hash, date_string], (err, rows) => {
-    if (err) {
-      alert(err);
-      return;
-    }
+  //check if user exist -> if true -> do not insert user
+  var user_exist = db.get('users').find({'username':form_user_string_replace}).value()
+  if (user_exist){
+    remote.dialog.showMessageBox({
+      type: 'info',
+      title: 'Attention !',
+      message: 'User already registered !',
+      buttons: ['Ok \!']
+    });
+    return;
+  }
+
+  //insert user in db
+  const insert_user_db = collection
+    .insert({ username: form_user_string_replace, user_password:form_password_string_hash, date:date_string })
+    .write()
+
+  //test user's insertion
+  if (insert_user_db){
+
     remote.dialog.showMessageBox({
       type: 'info',
       title: 'Attention !',
       message: 'Registration done',
       buttons: ['Ok \!']
     });
-    db.close();
     window.location.href = "index.html";
+  }
+  else{
+    alert("Error Insert User in Database")
+  }
 
-  });
-
-  db.close();
-
+//end insert_user function
 }
 
 //Login : check user exist from index.html
 function check_user_exist(form_user, form_password) {
-
   //require lib
   var bcrypt = require('bcryptjs');
   var db_config = require('../../../server/database_config.js');
   const remote = require('electron').remote;
-  var sqlite3 = require('sqlite3').verbose();
+  const low = require('lowdb')
+  const FileSync = require('../../../../node_modules/lowdb/adapters/FileSync.js')
+  const lodashId = require('lodash-id')
 
   //get sqlite3 db path
   var db_path = db_config.db_path;
 
-  //create sqlite3 database if not exist
-  var db = new sqlite3.Database(db_path);
+  //lowdb init db config
+  const adapter = new FileSync(db_path)
+  const db = low(adapter)
 
   //format user and password to string
   var form_user_string = String(form_user);
@@ -83,70 +99,71 @@ function check_user_exist(form_user, form_password) {
   //replace special charactere
   var form_user_string_replace = form_user_string.replace(/[^a-zA-Z0-9]/g, '');
 
+  //check if user exist -> if true -> do not insert user
+  var user_exist = db.get('users').find({'username':form_user_string_replace}).value();
 
-  //search user in database
-  var select_users_table = "SELECT id_user,username, user_password from users where username=?";
+  //test user exist
+  if (user_exist){
 
+    //and get some value from user
+    var get_user_id = user_exist.id;
+    var get_user_username = user_exist.username;
+    var get_user_password = user_exist.user_password;
+    var form_password_dehash = bcrypt.compareSync(form_password_string, get_user_password);
 
-  db.all(select_users_table, [form_user_string_replace], (err, rows) => {
-    if (err) {
-      alert(err);
-      return;
-    }
-
-    rows.forEach((row) => {
-      //verify password
-      var form_password_dehash = bcrypt.compareSync(form_password_string, row.user_password);
-      console.log("Users exist !");
-      //if user exist and verify password is true redirect to main.html
-      if (row.username == form_user_string_replace && form_password_dehash == true) {
-        var user_id = row.id_user;
-
-        const cookie = {
-          url: 'http://ulrichthekeeper.com',
-          name: form_user_string_replace,
-          value: String(row.id_user)
-        }
-        remote.session.defaultSession.cookies.set(cookie)
-          .then(() => {
-            // succès
-            console.log("success OK ")
-          }, (erreur) => {
-            console.error(erreur)
-          })
-        db.close();
-
-        window.location.href = "main.html";
+    if(get_user_username == form_user_string_replace && form_password_dehash == true){
+      //init cookie config
+      const cookie = {
+        url: 'http://ulrichthekeeper.com',
+        name: form_user_string_replace,
+        value: String(get_user_id)
       }
-      db.close();
-
+      //create cookie
+      remote.session.defaultSession.cookies.set(cookie)
+        .then(() => {
+          // succès
+          console.log("success OK ")
+        }, (erreur) => {
+          console.error(erreur)
+        })
+        window.location.href = "main.html";
+    }
+  }
+  else{
+    //if user not exist get message
+    remote.dialog.showMessageBox({
+      type: 'info',
+      title: 'Attention !',
+      message: 'Wrong Login or Password !',
+      buttons: ['Ok \!']
     });
+    return;
+  }
 
-
-
-  });
-
-
+//end check_user_exist function
 }
 
 
 //search data in database come from main.html
 function search_data() {
   //require lib
-  // var mysql = require('mysql');
   var db_config = require('../../../server/database_config.js');
   const remote = require('electron').remote;
   const algorithm = 'aes-256-cbc';
   var crypt = require('crypto');
-  var sqlite3 = require('sqlite3').verbose();
+  const low = require('lowdb')
+  const FileSync = require('../../../../node_modules/lowdb/adapters/FileSync.js')
+  const lodashId = require('lodash-id')
 
   //get sqlite3 db path
   var db_path = db_config.db_path;
 
-  //create sqlite3 database if not exist
-  var db = new sqlite3.Database(db_path);
+  //lowdb init db config
+  const adapter = new FileSync(db_path)
+  const db = low(adapter)
   var result_table_array = [];
   let table = "";
+
   // get cookies
   remote.session.defaultSession.cookies.get({
       url: 'http://ulrichthekeeper.com'
@@ -156,32 +173,31 @@ function search_data() {
       var cookie_user = cookies[0].name;
       console.log(cookies[0].name)
 
-      //search organisation with cookie in database
-      var select_users_table = "SELECT passwords.organisation, passwords.email, passwords.date_password, passwords.hash_password, passwords.key_password, passwords.iv FROM users INNER JOIN passwords ON users.id_user = passwords.id_user_fk WHERE users.username=?";
+      //get some value from database
+      var get_cookie_user_id = cookie[0].value;
+      var get_user_organisation = db.get('passwords').filter({'id': get_cookie_user_id}).map('organisation').value();
+      var get_user_email = db.get('passwords').filter({'id': get_cookie_user_id}).map('email').value();
+      var get_user_hash_password = db.get('passwords').filter({'id': get_cookie_user_id}).map('hash_password').value();
+      var get_user_date_password = db.get('passwords').filter({'id': get_cookie_user_id}).map('date_password').value();
+      var get_user_iv = db.get('passwords').filter({'id': get_cookie_user_id}).map('iv').value();
+      var get_user_key_password = db.get('passwords').filter({'id': get_cookie_user_id}).map('key_password').value();
 
       let result_string = 'Organisation: ';
 
+      //i for loop
+      var i;
 
-      db.all(select_users_table, [cookie_user], (err, rows) => {
-        if (err) {
-          alert(err);
-          return;
-        }
+      //loop for decrypt password and create data table
+      for(i=0;i<get_user_organisation.length;i++){
+        let iv2 = Buffer.from(get_user_iv[i], 'hex');
+        let encryptedText = Buffer.from(get_user_hash_password[i], 'hex');
+        let decipher = crypt.createDecipheriv('aes-256-cbc', Buffer.from(get_user_key_password[i], 'hex'), iv2);
+        let decrypted = decipher.update(encryptedText);
+        decrypted = Buffer.concat([decrypted, decipher.final()]);
+        result_string = result_string + " " + get_user_organisation[i] + " ; ";
 
-
-
-
-        rows.forEach((row) => {
-          let iv2 = Buffer.from(row.iv, 'hex');
-          let encryptedText = Buffer.from(row.hash_password, 'hex');
-          let decipher = crypt.createDecipheriv('aes-256-cbc', Buffer.from(row.key_password, 'hex'), iv2);
-          let decrypted = decipher.update(encryptedText);
-          decrypted = Buffer.concat([decrypted, decipher.final()]);
-          result_string = result_string + " " + row.organisation + " ; ";
-
-          table += row.organisation + ',' + row.email + ',' + decrypted.toString() + ',' + row.date_password + ',';
-
-        });
+        table += get_user_organisation[i] + ',' + get_user_email[i] + ',' + decrypted.toString() + ',' + get_user_date_password[i] + ',';
+      }
 
         table = table.split(',');
         while (table[0]) {
@@ -194,7 +210,6 @@ function search_data() {
           $('#table_id').DataTable({
             data: result_table_array,
             destroy: true,
-
 
                 columns: [{
                 name:'organisation',
@@ -223,15 +238,6 @@ function search_data() {
 
             ]
 
-
-            // ,
-            // "columnDefs": [{
-            //   "targets": [0],
-            //   "visible": true,
-            //   "searchable": false,
-            //   "className": 'select-checkbox',
-            // }]
-
           });
 
           //insert click listener here
@@ -255,20 +261,16 @@ function search_data() {
 
           });
 
-
-
-
+    //end documentReady
         });
 
-      });
-
-
+    //end success create cookie
     }).catch((erreur) => {
       console.log(error)
 
     })
 
-
+//end search_password function
 }
 
 
@@ -280,16 +282,17 @@ function input_password(insert_email, insert_organisation, insert_password) {
   var crypt = require('crypto');
   const algorithm = 'aes-256-cbc';
   var db_config = require('../../../server/database_config.js');
-  const remote = require('electron').remote;
-
-  //import sqlite3
-  var sqlite3 = require('sqlite3').verbose();
+  const remote = require('electron').remote
+  const low = require('lowdb')
+  const FileSync = require('../../../../node_modules/lowdb/adapters/FileSync.js')
+  const lodashId = require('lodash-id')
 
   //get sqlite3 db path
   var db_path = db_config.db_path;
 
-  //create sqlite3 database if not exist
-  var db = new sqlite3.Database(db_path);
+  //lowdb init db config
+  const adapter = new FileSync(db_path)
+  const db = low(adapter)
 
   //cast form element
   var insert_email_string = String(insert_email);
@@ -325,10 +328,10 @@ function input_password(insert_email, insert_organisation, insert_password) {
       var result_encrypted = result.encryptedData;
       var result_key = key.toString('hex');
 
-
-      //insert query in database
-      var insert_password_table = "INSERT INTO passwords (email,organisation,hash_password,key_password,iv,date_password,id_user_fk) values (?,?,?,?,?,?,?)";
-      var value_passwords_table = [insert_email_string, insert_organisation_string, result_encrypted, result_key, result_iv, date_string, cookie_user_id];
+      //insert user in db
+      const insert_user_db = collection
+        .insert({ email: insert_email_string, organisation:insert_organisation_string, hash_password:result_encrypted, key_password:result_key, iv:result_iv,date_password:date_string,id:cookie_user_id })
+        .write()
 
       db.all(insert_password_table, value_passwords_table, (err, rows) => {
         if (err) {
@@ -347,6 +350,7 @@ function input_password(insert_email, insert_organisation, insert_password) {
     }).catch((erreur) => {
       console.log(error)
     })
+//end input_password function
 }
 
 function generate_password(insert_email, insert_organisation) {
