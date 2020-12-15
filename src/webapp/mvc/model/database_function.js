@@ -18,7 +18,10 @@ function insert_user(form_user, form_password) {
 
   //init db schema and get users schema
   const collection = db
-    .defaults({ users: [], passwords:[] })
+    .defaults({
+      users: [],
+      passwords: []
+    })
     .get('users')
 
   //format date to string
@@ -41,8 +44,10 @@ function insert_user(form_user, form_password) {
   var form_password_string_hash = String(form_password_hash);
 
   //check if user exist -> if true -> do not insert user
-  var user_exist = db.get('users').find({'username':form_user_string_replace}).value()
-  if (user_exist){
+  var user_exist = db.get('users').find({
+    'username': form_user_string_replace
+  }).value()
+  if (user_exist) {
     remote.dialog.showMessageBox({
       type: 'info',
       title: 'Attention !',
@@ -54,11 +59,15 @@ function insert_user(form_user, form_password) {
 
   //insert user in db
   const insert_user_db = collection
-    .insert({ username: form_user_string_replace, user_password:form_password_string_hash, date:date_string })
+    .insert({
+      username: form_user_string_replace,
+      user_password: form_password_string_hash,
+      date: date_string
+    })
     .write()
 
   //test user's insertion
-  if (insert_user_db){
+  if (insert_user_db) {
 
     remote.dialog.showMessageBox({
       type: 'info',
@@ -67,12 +76,11 @@ function insert_user(form_user, form_password) {
       buttons: ['Ok \!']
     });
     window.location.href = "index.html";
-  }
-  else{
+  } else {
     alert("Error Insert User in Database")
   }
 
-//end insert_user function
+  //end insert_user function
 }
 
 //Login : check user exist from index.html
@@ -100,10 +108,12 @@ function check_user_exist(form_user, form_password) {
   var form_user_string_replace = form_user_string.replace(/[^a-zA-Z0-9]/g, '');
 
   //check if user exist -> if true -> do not insert user
-  var user_exist = db.get('users').find({'username':form_user_string_replace}).value();
+  var user_exist = db.get('users').find({
+    'username': form_user_string_replace
+  }).value();
 
   //test user exist
-  if (user_exist){
+  if (user_exist) {
 
     //and get some value from user
     var get_user_id = user_exist.id;
@@ -111,7 +121,7 @@ function check_user_exist(form_user, form_password) {
     var get_user_password = user_exist.user_password;
     var form_password_dehash = bcrypt.compareSync(form_password_string, get_user_password);
 
-    if(get_user_username == form_user_string_replace && form_password_dehash == true){
+    if (get_user_username == form_user_string_replace && form_password_dehash == true) {
       //init cookie config
       const cookie = {
         url: 'http://ulrichthekeeper.com',
@@ -126,10 +136,9 @@ function check_user_exist(form_user, form_password) {
         }, (erreur) => {
           console.error(erreur)
         })
-        window.location.href = "main.html";
+      window.location.href = "main.html";
     }
-  }
-  else{
+  } else {
     //if user not exist get message
     remote.dialog.showMessageBox({
       type: 'info',
@@ -140,7 +149,7 @@ function check_user_exist(form_user, form_password) {
     return;
   }
 
-//end check_user_exist function
+  //end check_user_exist function
 }
 
 
@@ -176,12 +185,24 @@ function search_data() {
       //get some value from database
       var get_cookie_user_id = cookies[0].value;
 
-      var get_user_organisation = db.get('passwords').filter({'id': get_cookie_user_id}).map('organisation').value();
-      var get_user_email = db.get('passwords').filter({'id': get_cookie_user_id}).map('email').value();
-      var get_user_hash_password = db.get('passwords').filter({'id': get_cookie_user_id}).map('hash_password').value();
-      var get_user_date_password = db.get('passwords').filter({'id': get_cookie_user_id}).map('date_password').value();
-      var get_user_iv = db.get('passwords').filter({'id': get_cookie_user_id}).map('iv').value();
-      var get_user_key_password = db.get('passwords').filter({'id': get_cookie_user_id}).map('key_password').value();
+      var get_user_organisation = db.get('passwords').filter({
+        'id': get_cookie_user_id
+      }).map('organisation').value();
+      var get_user_email = db.get('passwords').filter({
+        'id': get_cookie_user_id
+      }).map('email').value();
+      var get_user_hash_password = db.get('passwords').filter({
+        'id': get_cookie_user_id
+      }).map('hash_password').value();
+      var get_user_date_password = db.get('passwords').filter({
+        'id': get_cookie_user_id
+      }).map('date_password').value();
+      var get_user_iv = db.get('passwords').filter({
+        'id': get_cookie_user_id
+      }).map('iv').value();
+      var get_user_key_password = db.get('passwords').filter({
+        'id': get_cookie_user_id
+      }).map('key_password').value();
 
       let result_string = 'Organisation: ';
 
@@ -189,7 +210,7 @@ function search_data() {
       var i;
 
       //loop for decrypt password and create data table
-      for(i=0;i<get_user_organisation.length;i++){
+      for (i = 0; i < get_user_organisation.length; i++) {
         let iv2 = Buffer.from(get_user_iv[i], 'hex');
         let encryptedText = Buffer.from(get_user_hash_password[i], 'hex');
         let decipher = crypt.createDecipheriv('aes-256-cbc', Buffer.from(get_user_key_password[i], 'hex'), iv2);
@@ -200,85 +221,82 @@ function search_data() {
         table += get_user_organisation[i] + ',' + get_user_email[i] + ',' + decrypted.toString() + ',' + get_user_date_password[i] + ',';
       }
 
-        table = table.split(',');
-        while (table[0]) {
-          result_table_array.push(table.splice(0, 4));
-        }
-        document.getElementById("organisation").innerHTML = result_string;
+      //cast string to array
+      table = table.split(',');
+      while (table[0]) {
+        result_table_array.push(table.splice(0, 4));
+      }
+
+      //push organisation in DOM
+      document.getElementById("organisation").innerHTML = result_string;
+
+      //init and create datatables
+      $(document).ready(function() {
+        $('#table_id').DataTable({
+          data: result_table_array,
+          destroy: true,
+
+          columns: [{
+              name: 'organisation',
+              title: "Organisation",
+              targets: 0
+            },
+            {
+              name: 'email',
+              title: "Email",
+              targets: 1
+
+            },
+            {
+              name: 'password',
+              title: "Password",
+              visible: false,
+              targets: 2
 
 
-        $(document).ready(function() {
-          $('#table_id').DataTable({
-            data: result_table_array,
-            destroy: true,
-
-                columns: [{
-                name:'organisation',
-                title: "Organisation",
-                targets: 0
-              },
-              {
-                name:'email',
-                title: "Email",
-                targets: 1
-
-              },
-              {
-                name:'password',
-                title: "Password",
-                visible : false,
-                targets: 2
-
-
-              },
-              {
-                name:'date',
-                title: "Date",
-                targets: 3
-              }
-
-            ]
-
-          });
-
-          //insert click listener here
-          var table_select = $('#table_id').DataTable();
-          $('#table_id tbody').on('click', 'tr', function(e) {
-
-            //show or hide column
-            // var column = table_select.column( [2] );
-            // column.visible( ! column.visible() );
-
-            //show or hide row value select by click
-            table_select.rows().every(function() {
-              this.child('Your password : ' + this.data()[2]);
-            });
-            var child = table_select.row(this).child;
-            if (child.isShown()) {
-              child.hide();
-            } else {
-              child.show();
+            },
+            {
+              name: 'date',
+              title: "Date",
+              targets: 3
             }
 
-          });
+          ]
 
-    //end documentReady
         });
 
-    //end success get cookie
+        //insert click listener here
+        var table_select = $('#table_id').DataTable();
+        $('#table_id tbody').on('click', 'tr', function(e) {
+
+          //show or hide row value select by click
+          table_select.rows().every(function() {
+            this.child('Your password : ' + this.data()[2]);
+          });
+          var child = table_select.row(this).child;
+          if (child.isShown()) {
+            child.hide();
+          } else {
+            child.show();
+          }
+
+        });
+
+        //end documentReady
+      });
+
+      //end success get cookie
     }).catch((erreur) => {
       console.log(error)
-
     })
 
-//end search_password function
+  //end search_password function
 }
 
 
 
 
 function input_password(insert_email, insert_organisation, insert_password) {
-
   //require lib
   var crypt = require('crypto');
   const algorithm = 'aes-256-cbc';
@@ -315,9 +333,11 @@ function input_password(insert_email, insert_organisation, insert_password) {
       var date = today.getDate() + '-' + (today.getMonth() + 1) + '-' + today.getFullYear()
       var date_string = String(date);
 
+      //random key and iv
       const key = crypt.randomBytes(32);
       const iv = crypt.randomBytes(16);
 
+      //encrypt password
       let cipher = crypt.createCipheriv('aes-256-cbc', Buffer.from(key), iv);
       let encrypted = cipher.update(insert_password_string);
       encrypted = Buffer.concat([encrypted, cipher.final()]);
@@ -326,18 +346,28 @@ function input_password(insert_email, insert_organisation, insert_password) {
         iv: iv.toString('hex'),
         encryptedData: encrypted.toString('hex')
       };
+
+      //get result
       var result_iv = result.iv;
       var result_encrypted = result.encryptedData;
       var result_key = key.toString('hex');
 
-      //insert user in db
+      //insert password in db
       const insert_user_db = db
         .get('passwords')
-        .push({ email: insert_email_string, organisation:insert_organisation_string, hash_password:result_encrypted, key_password:result_key, iv:result_iv,date_password:date_string,id:cookie_user_id })
+        .push({
+          email: insert_email_string,
+          organisation: insert_organisation_string,
+          hash_password: result_encrypted,
+          key_password: result_key,
+          iv: result_iv,
+          date_password: date_string,
+          id: cookie_user_id
+        })
         .write()
 
-
-      if(insert_user_db){
+      //test password's insertion
+      if (insert_user_db) {
         remote.dialog.showMessageBox({
           type: 'info',
           title: 'Attention !',
@@ -349,7 +379,8 @@ function input_password(insert_email, insert_organisation, insert_password) {
     }).catch((erreur) => {
       console.log(error)
     })
-//end input_password function
+
+  //end input_password function
 }
 
 function generate_password(insert_email, insert_organisation) {
@@ -364,12 +395,14 @@ function generate_password(insert_email, insert_organisation) {
   const FileSync = require('../../../../node_modules/lowdb/adapters/FileSync.js')
   const lodashId = require('lodash-id')
 
+  //random length password function
   function getRandomIntInclusive(min, max) {
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min + 1)) + min; //The maximum is inclusive and the minimum is inclusive
   }
 
+  //get random length password
   var length_password = getRandomIntInclusive(min_pass, max_pass)
 
   //get db path
@@ -384,6 +417,7 @@ function generate_password(insert_email, insert_organisation) {
   var insert_organisation_string = String(insert_organisation);
   var insert_password_string = '';
 
+  //generate password
   const generatePassword = (
       length = length_password,
       wishlist = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz()&[]=^*~!@-#$'
@@ -408,9 +442,11 @@ function generate_password(insert_email, insert_organisation) {
       var date = today.getDate() + '-' + (today.getMonth() + 1) + '-' + today.getFullYear()
       var date_string = String(date);
 
+      //get random key and iv
       const key = crypt.randomBytes(32);
       const iv = crypt.randomBytes(16);
 
+      //encrypt password
       let cipher = crypt.createCipheriv('aes-256-cbc', Buffer.from(key), iv);
       let encrypted = cipher.update(insert_password_string);
       encrypted = Buffer.concat([encrypted, cipher.final()]);
@@ -419,28 +455,39 @@ function generate_password(insert_email, insert_organisation) {
         iv: iv.toString('hex'),
         encryptedData: encrypted.toString('hex')
       };
+
+      //get result
       var result_iv = result.iv;
       var result_encrypted = result.encryptedData;
       var result_key = key.toString('hex');
 
-      //insert user in db
+      //insert password in db
       const insert_user_db = db
         .get('passwords')
-        .push({ email: insert_email_string, organisation:insert_organisation_string, hash_password:result_encrypted, key_password:result_key, iv:result_iv,date_password:date_string,id:cookie_user_id })
+        .push({
+          email: insert_email_string,
+          organisation: insert_organisation_string,
+          hash_password: result_encrypted,
+          key_password: result_key,
+          iv: result_iv,
+          date_password: date_string,
+          id: cookie_user_id
+        })
         .write()
 
-        if(insert_user_db){
-          remote.dialog.showMessageBox({
-            type: 'info',
-            title: 'Attention !',
-            message: 'Input password successful \! ',
-            buttons: ['Ok \!']
-          });
-        }
+      //test password's insertion
+      if (insert_user_db) {
+        remote.dialog.showMessageBox({
+          type: 'info',
+          title: 'Attention !',
+          message: 'Input password successful \! ',
+          buttons: ['Ok \!']
+        });
+      }
 
     }).catch((erreur) => {
       console.log(error)
     })
 
-//end generate_password function
+  //end generate_password function
 }

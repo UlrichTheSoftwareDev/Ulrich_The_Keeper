@@ -1,8 +1,7 @@
-const { app, BrowserWindow, netLog, contentTracing, session } = require('electron')
-// const ipc = require('electron').ipcMain;
+const { app, BrowserWindow } = require('electron')
 
 function createWindow () {
-  // Cree la fenetre du navigateur.
+  // create window
   const win = new BrowserWindow({
     width: 800,
     height: 600,
@@ -22,7 +21,7 @@ function createWindow () {
   }
 )
 
-  // et charger le fichier index.html de l'application.
+  // load html file
   win.loadFile('./src/webapp/public/html/index.html');
 
   //show the app only if the app is ready (avoid startup white screen)
@@ -33,7 +32,7 @@ function createWindow () {
   //remove menubar from electron app : uncomment in PROD
   //win.removeMenu();
 
-  // Ouvre les DevTools.
+  // open  DevTools.
   //win.webContents.openDevTools()
 
   // another way to disable dev tools
@@ -42,16 +41,12 @@ function createWindow () {
 
 }
 
-
-
-// Cette méthode sera appelée quant Electron aura fini
-// de s'initialiser et prêt à créer des fenêtres de navigation.
-// Certaines APIs peuvent être utilisées uniquement quant cet événement est émit.
+//init and create window
 app.whenReady().then(createWindow)
 
 
 
-// Quitter lorsque toutes les fenêtres sont fermées, sauf sur macOS. There, it's common
+// leave app when window is closed (except MacOS). There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
@@ -69,6 +64,3 @@ app.on('activate', () => {
     createWindow()
   }
 })
-
-
-

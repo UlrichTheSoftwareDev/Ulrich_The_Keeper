@@ -1,13 +1,15 @@
 //check user exist and match with database
 function login_index() {
 
+  //require lib
   const remote = require('electron').remote;
 
+  //get element from DOM
   var login_index = document.getElementById("form_index_login").value;
   var password_index = document.getElementById("form_index_password").value;
 
+  //if login or password is empty
   if (login_index.length == 0 || password_index.length == 0) {
-    // alert("vide")
 
     remote.dialog.showMessageBox({
       type: 'info',
