@@ -174,7 +174,8 @@ function search_data() {
       console.log(cookies[0].name)
 
       //get some value from database
-      var get_cookie_user_id = cookie[0].value;
+      var get_cookie_user_id = cookies[0].value;
+
       var get_user_organisation = db.get('passwords').filter({'id': get_cookie_user_id}).map('organisation').value();
       var get_user_email = db.get('passwords').filter({'id': get_cookie_user_id}).map('email').value();
       var get_user_hash_password = db.get('passwords').filter({'id': get_cookie_user_id}).map('hash_password').value();
@@ -264,7 +265,7 @@ function search_data() {
     //end documentReady
         });
 
-    //end success create cookie
+    //end success get cookie
     }).catch((erreur) => {
       console.log(error)
 
@@ -287,7 +288,7 @@ function input_password(insert_email, insert_organisation, insert_password) {
   const FileSync = require('../../../../node_modules/lowdb/adapters/FileSync.js')
   const lodashId = require('lodash-id')
 
-  //get sqlite3 db path
+  //get db path
   var db_path = db_config.db_path;
 
   //lowdb init db config
@@ -304,7 +305,8 @@ function input_password(insert_email, insert_organisation, insert_password) {
       url: 'http://ulrichthekeeper.com'
     })
     .then((cookies) => {
-      var cookie_user_id = Number(cookies[0].value);
+      // var cookie_user_id = Number(cookies[0].value);
+      var cookie_user_id = cookies[0].value;
 
       console.log(cookies[0].name)
 
@@ -329,23 +331,20 @@ function input_password(insert_email, insert_organisation, insert_password) {
       var result_key = key.toString('hex');
 
       //insert user in db
-      const insert_user_db = collection
-        .insert({ email: insert_email_string, organisation:insert_organisation_string, hash_password:result_encrypted, key_password:result_key, iv:result_iv,date_password:date_string,id:cookie_user_id })
+      const insert_user_db = db
+        .get('passwords')
+        .push({ email: insert_email_string, organisation:insert_organisation_string, hash_password:result_encrypted, key_password:result_key, iv:result_iv,date_password:date_string,id:cookie_user_id })
         .write()
 
-      db.all(insert_password_table, value_passwords_table, (err, rows) => {
-        if (err) {
-          alert(err);
-          return;
-        }
+
+      if(insert_user_db){
         remote.dialog.showMessageBox({
           type: 'info',
           title: 'Attention !',
           message: 'Input password successful \! ',
           buttons: ['Ok \!']
         });
-
-      });
+      }
 
     }).catch((erreur) => {
       console.log(error)
@@ -354,16 +353,16 @@ function input_password(insert_email, insert_organisation, insert_password) {
 }
 
 function generate_password(insert_email, insert_organisation) {
-
   //require lib
-  //import sqlite3
-  var sqlite3 = require('sqlite3').verbose();
   var crypt = require('crypto');
   const algorithm = 'aes-256-cbc';
   var db_config = require('../../../server/database_config.js');
   const remote = require('electron').remote;
   var min_pass = db_config.min_generate;
   var max_pass = db_config.max_generate;
+  const low = require('lowdb')
+  const FileSync = require('../../../../node_modules/lowdb/adapters/FileSync.js')
+  const lodashId = require('lodash-id')
 
   function getRandomIntInclusive(min, max) {
     min = Math.ceil(min);
@@ -373,12 +372,12 @@ function generate_password(insert_email, insert_organisation) {
 
   var length_password = getRandomIntInclusive(min_pass, max_pass)
 
-
-  //get sqlite3 db path
+  //get db path
   var db_path = db_config.db_path;
 
-  //create sqlite3 database if not exist
-  var db = new sqlite3.Database(db_path);
+  //lowdb init db config
+  const adapter = new FileSync(db_path)
+  const db = low(adapter)
 
   //cast form element
   var insert_email_string = String(insert_email);
@@ -400,7 +399,7 @@ function generate_password(insert_email, insert_organisation) {
       url: 'http://ulrichthekeeper.com'
     })
     .then((cookies) => {
-      var cookie_user_id = Number(cookies[0].value);
+      var cookie_user_id = cookies[0].value;
 
       console.log(cookies[0].name)
 
@@ -424,27 +423,24 @@ function generate_password(insert_email, insert_organisation) {
       var result_encrypted = result.encryptedData;
       var result_key = key.toString('hex');
 
-      //insert query in database
-      var insert_password_table = "INSERT INTO passwords (email,organisation,hash_password,key_password,iv,date_password,id_user_fk) values (?,?,?,?,?,?,?)";
-      var value_passwords_table = [insert_email_string, insert_organisation_string, result_encrypted, result_key, result_iv, date_string, cookie_user_id];
+      //insert user in db
+      const insert_user_db = db
+        .get('passwords')
+        .push({ email: insert_email_string, organisation:insert_organisation_string, hash_password:result_encrypted, key_password:result_key, iv:result_iv,date_password:date_string,id:cookie_user_id })
+        .write()
 
-      db.all(insert_password_table, value_passwords_table, (err, rows) => {
-        if (err) {
-          alert(err);
-          return;
+        if(insert_user_db){
+          remote.dialog.showMessageBox({
+            type: 'info',
+            title: 'Attention !',
+            message: 'Input password successful \! ',
+            buttons: ['Ok \!']
+          });
         }
-        remote.dialog.showMessageBox({
-          type: 'info',
-          title: 'Attention !',
-          message: 'Insert password successful \! ',
-          buttons: ['Ok \!']
-        });
-
-      });
 
     }).catch((erreur) => {
       console.log(error)
     })
 
-
+//end generate_password function
 }

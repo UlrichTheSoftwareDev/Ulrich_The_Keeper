@@ -5,7 +5,41 @@
       "user_password": "$2a$10$TQCziBJc1RH3xvXBsFtZDOQiF6iJ.Tqf24QzsfSsRVau4TYkCImJW",
       "date": "15-12-2020",
       "id": "b14eb192-34c5-4c40-a34d-1a61307cc9a0"
+    },
+    {
+      "username": "bb",
+      "user_password": "$2a$10$EoB0eaeEIgvTDljaWSEQZeDLVSnp0XuOTNu2Xay2xmj4xLG.TR1gm",
+      "date": "15-12-2020",
+      "id": "0271c925-f811-4723-bba6-ac9505e70af9"
     }
   ],
-  "passwords": []
+  "passwords": [
+    {
+      "email": "aa",
+      "organisation": "aa",
+      "hash_password": "f8beb144a94d281d997078ec552d8992",
+      "key_password": "8205df64d358e1c2a32401c5116ade9a6758601c38bec220c2961ec4ef865d22",
+      "iv": "443d44c70400fb5ce092d512cc9db87b",
+      "date_password": "15-12-2020",
+      "id": "b14eb192-34c5-4c40-a34d-1a61307cc9a0"
+    },
+    {
+      "email": "cc",
+      "organisation": "cc",
+      "hash_password": "c1e972171dc7a7c7e537b91059d100bb",
+      "key_password": "98c1199fea97b7e00f04f8fc853ffca070314de82aa079d7637cff102f03ceec",
+      "iv": "aabedf056dac93ee016918cf936c482d",
+      "date_password": "15-12-2020",
+      "id": "b14eb192-34c5-4c40-a34d-1a61307cc9a0"
+    },
+    {
+      "email": "zz",
+      "organisation": "zz",
+      "hash_password": "913b3b582a787c2601bda0ef522223afabf05305c6ef812557d12a1ce58dd31c",
+      "key_password": "3c479d4d8f8beed0ab6a45957c15a5fca121e38fc676e6252e6abd755cc10f14",
+      "iv": "d88bb99a0b2381d20222fd3f88e3af42",
+      "date_password": "15-12-2020",
+      "id": "b14eb192-34c5-4c40-a34d-1a61307cc9a0"
+    }
+  ]
 }
