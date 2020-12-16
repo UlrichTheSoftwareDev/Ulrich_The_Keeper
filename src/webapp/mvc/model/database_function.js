@@ -1,3 +1,85 @@
+//register.html -> generate key and encrypt it from hash password users
+function init_key_password_user(hash_password){
+
+  //require lib
+  const algorithm = 'aes-256-cbc';
+  var crypt = require('crypto');
+  var db_config = require('../../../server/database_config.js');
+  var min_pass = db_config.min_generate;
+  var max_pass = db_config.max_generate;
+
+  //random length password function
+  function getRandomIntInclusive(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min; //The maximum is inclusive and the minimum is inclusive
+  }
+
+  var insert_password_string = '';
+
+  //get random length password
+  var length_password = getRandomIntInclusive(min_pass, max_pass)
+
+  //generate password
+  const generatePassword = (
+      length = length_password,
+      wishlist = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz()&[]=^*~!@-#$'
+    ) =>
+    Array.from(crypt.randomFillSync(new Uint32Array(length)))
+    .map((x) => wishlist[x % wishlist.length])
+    .join('')
+
+  const iv = crypt.randomBytes(16);
+
+  insert_password_string = generatePassword();
+
+  let hash_key_sha = crypt.createHash('sha256').update(String(hash_password)).digest('base64').substr(0, 32);
+
+  //encrypt password
+  let cipher = crypt.createCipheriv('aes-256-cbc', hash_key_sha, iv);
+  let encrypted = cipher.update(insert_password_string);
+  encrypted= Buffer.concat([encrypted, cipher.final()]);
+
+  var result = {
+    iv: iv.toString('hex'),
+    encryptedData: encrypted.toString('hex')
+  };
+
+  //get result
+  var result_iv = result.iv;
+  var result_encrypted = result.encryptedData;
+
+  //decrypt aes password
+  let iv2 = Buffer.from(result_iv, 'hex');
+  let encryptedText = Buffer.from(result_encrypted, 'hex');
+  let decipher = crypt.createDecipheriv('aes-256-cbc', hash_key_sha, iv2);
+  let decrypted = decipher.update(encryptedText);
+  decrypted = Buffer.concat([decrypted, decipher.final()]);
+  var ok = decrypted.toString();
+
+  return [result_iv, result_encrypted]
+}
+
+//decrypt key password user
+function decrypt_key_password_user(key,iv,encrypted_password){
+  //require lib
+  const algorithm = 'aes-256-cbc';
+  var crypt = require('crypto');
+
+  var iv_string = String(iv);
+  var key_string = String(key);
+  var encrypted_password_string = String(encrypted_password);
+
+  //decrypt aes password
+  let iv2 = Buffer.from(iv_string,'hex');
+  let encryptedText = Buffer.from(encrypted_password_string, 'hex');
+  let decipher = crypt.createDecipheriv('aes-256-cbc', key_string, iv2);
+  let decrypted = decipher.update(encryptedText);
+  decrypted = Buffer.concat([decrypted, decipher.final()]);
+  return decrypted.toString()
+}
+
+
 //register.html -> registration
 function insert_user(form_user, form_password) {
   //require lib
@@ -43,6 +125,10 @@ function insert_user(form_user, form_password) {
   //format hash password to string
   var form_password_string_hash = String(form_password_hash);
 
+  var result_iv_and_encrypted_psswd = init_key_password_user(form_password_string);
+  var result_iv = result_iv_and_encrypted_psswd[0];
+  var result_encrypted_psswd = result_iv_and_encrypted_psswd[1];
+
   //check if user exist -> if true -> do not insert user
   var user_exist = db.get('users').find({
     'username': form_user_string_replace
@@ -62,7 +148,9 @@ function insert_user(form_user, form_password) {
     .insert({
       username: form_user_string_replace,
       user_password: form_password_string_hash,
-      date: date_string
+      date: date_string,
+      iv: result_iv,
+      encrypted_psswd: result_encrypted_psswd
     })
     .write()
 
@@ -92,8 +180,9 @@ function check_user_exist(form_user, form_password) {
   const low = require('lowdb')
   const FileSync = require('../../../../node_modules/lowdb/adapters/FileSync.js')
   const lodashId = require('lodash-id')
+  var crypt = require('crypto');
 
-  //get sqlite3 db path
+  //get db path
   var db_path = db_config.db_path;
 
   //lowdb init db config
@@ -103,6 +192,13 @@ function check_user_exist(form_user, form_password) {
   //format user and password to string
   var form_user_string = String(form_user);
   var form_password_string = String(form_password);
+
+  //get hash from pass
+  var hash_key_sha = crypt.createHash('sha256').update(String(form_password_string)).digest('base64').substr(0, 32);
+
+  //session storage
+  sessionStorage.setItem('key', hash_key_sha);
+  let data = sessionStorage.getItem('key');
 
   //replace special charactere
   var form_user_string_replace = form_user_string.replace(/[^a-zA-Z0-9]/g, '');
@@ -151,7 +247,6 @@ function check_user_exist(form_user, form_password) {
 
   //end check_user_exist function
 }
-
 
 //search data in database come from main.html
 function search_data() {
@@ -333,12 +428,28 @@ function input_password(insert_email, insert_organisation, insert_password) {
       var date = today.getDate() + '-' + (today.getMonth() + 1) + '-' + today.getFullYear()
       var date_string = String(date);
 
+      //get hash key local storage
+      var data_key = sessionStorage.getItem('key');
+
+      //get user iv
+      var get_user_iv = db.get('users').filter({
+        'id': cookie_user_id
+      }).map('iv').value();
+
+      //get user encrypted psswd
+      var get_user_encrypted_psswd = db.get('users').filter({
+        'id': cookie_user_id
+      }).map('encrypted_psswd').value();
+
+      var decrypted_password = decrypt_key_password_user(data_key,get_user_iv,get_user_encrypted_psswd)
+
       //random key and iv
-      const key = crypt.randomBytes(32);
+      // const key = crypt.randomBytes(32);
       const iv = crypt.randomBytes(16);
 
       //encrypt password
-      let cipher = crypt.createCipheriv('aes-256-cbc', Buffer.from(key), iv);
+      let cipher = crypt.createCipheriv('aes-256-cbc', decrypted_password, iv);
+
       let encrypted = cipher.update(insert_password_string);
       encrypted = Buffer.concat([encrypted, cipher.final()]);
 
@@ -376,7 +487,7 @@ function input_password(insert_email, insert_organisation, insert_password) {
         });
       }
 
-    }).catch((erreur) => {
+    }).catch((error) => {
       console.log(error)
     })
 
@@ -485,7 +596,7 @@ function generate_password(insert_email, insert_organisation) {
         });
       }
 
-    }).catch((erreur) => {
+    }).catch((error) => {
       console.log(error)
     })
 

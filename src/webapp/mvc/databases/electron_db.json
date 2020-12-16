@@ -2,44 +2,20 @@
   "users": [
     {
       "username": "aa",
-      "user_password": "$2a$10$TQCziBJc1RH3xvXBsFtZDOQiF6iJ.Tqf24QzsfSsRVau4TYkCImJW",
-      "date": "15-12-2020",
-      "id": "b14eb192-34c5-4c40-a34d-1a61307cc9a0"
+      "user_password": "$2a$10$Jyt.8cHstddCi.QwseGK9O6IjIUZNR2WugNFYai8f4.K6nsJQV7vm",
+      "date": "16-12-2020",
+      "iv": "91c0cd75523f417d6a98ee3c8dfe731f",
+      "encrypted_psswd": "1083f03704bcb937c1e68822ef520c77c55dd520e2c74037d888450001025091",
+      "id": "e8e663ea-dc19-4c41-a6ed-44b998785a51"
     },
     {
-      "username": "bb",
-      "user_password": "$2a$10$EoB0eaeEIgvTDljaWSEQZeDLVSnp0XuOTNu2Xay2xmj4xLG.TR1gm",
-      "date": "15-12-2020",
-      "id": "0271c925-f811-4723-bba6-ac9505e70af9"
+      "username": "cc",
+      "user_password": "$2a$10$ZqyaOf.Pe40T2nYf7OFh8.V6F1v.C.cnBu.hvWoDct/5cysS.OXZG",
+      "date": "16-12-2020",
+      "iv": "46bf370b1d764a65f391d0572da9be4a",
+      "encrypted_psswd": "c0c85eea8812b5a65627a400cc89fa0ad7fe8df545181ff282778e42f84b33c6",
+      "id": "38600461-8f7e-4df3-8a4f-fa1b65487d30"
     }
   ],
-  "passwords": [
-    {
-      "email": "aa",
-      "organisation": "aa",
-      "hash_password": "f8beb144a94d281d997078ec552d8992",
-      "key_password": "8205df64d358e1c2a32401c5116ade9a6758601c38bec220c2961ec4ef865d22",
-      "iv": "443d44c70400fb5ce092d512cc9db87b",
-      "date_password": "15-12-2020",
-      "id": "b14eb192-34c5-4c40-a34d-1a61307cc9a0"
-    },
-    {
-      "email": "cc",
-      "organisation": "cc",
-      "hash_password": "c1e972171dc7a7c7e537b91059d100bb",
-      "key_password": "98c1199fea97b7e00f04f8fc853ffca070314de82aa079d7637cff102f03ceec",
-      "iv": "aabedf056dac93ee016918cf936c482d",
-      "date_password": "15-12-2020",
-      "id": "b14eb192-34c5-4c40-a34d-1a61307cc9a0"
-    },
-    {
-      "email": "zz",
-      "organisation": "zz",
-      "hash_password": "913b3b582a787c2601bda0ef522223afabf05305c6ef812557d12a1ce58dd31c",
-      "key_password": "3c479d4d8f8beed0ab6a45957c15a5fca121e38fc676e6252e6abd755cc10f14",
-      "iv": "d88bb99a0b2381d20222fd3f88e3af42",
-      "date_password": "15-12-2020",
-      "id": "b14eb192-34c5-4c40-a34d-1a61307cc9a0"
-    }
-  ]
+  "passwords": []
 }
