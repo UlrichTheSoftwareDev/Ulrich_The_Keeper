@@ -109,7 +109,7 @@ electron-packager . electron-tutorial-app --overwrite --asar=true --platform=win
 
 ### Known Issues
 
-Feel free to help me and clone this project ! 
+Feel free to help me and clone this project !
 
 * **Error Require Sqlite3** :  When I required 2 times or more sqlite3 lib, I have a white screen error without any logs. Example : going from Index.html to Main.html and search password (or whatever that need to use the database a second time). I put 2 db.close() in search_user_exist() to make sure that de database is closed but it's works but is really ugly. I don't know how to resolve this issue.
 
@@ -138,3 +138,4 @@ Pateyron Sacha - sachapateyron@gmail.com
 * ElectronJS -> [Documentation]( https://www.electronjs.org/)
 * NodeJS -> [Documentation]( https://nodejs.org/)
 * The icons I use -> GNU General Public License v3.0 -> [Source]( https://iconarchive.com/show/papirus-apps-icons-by-papirus-team/pingus-icon-icon.html)
+* Image font -> Pixabay Licence -> https://pixabay.com/fr/photos/voie-lact%C3%A9e-galaxie-nuit-ciel-984050/

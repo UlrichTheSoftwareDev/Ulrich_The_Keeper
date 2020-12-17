@@ -10,18 +10,17 @@
   "author": "",
   "license": "Apache2",
   "devDependencies": {
-    "decache": "^4.6.0",
     "electron": "^10.1.4",
     "electron-builder": "^22.9.1",
     "electron-packager": "^15.1.0",
-    "sqlite3": "^5.0.0"
+    "lodash-id": "^0.14.0"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "crypto": "^1.0.1",
     "datatables.net-dt": "^1.10.22",
     "jquery": "^3.5.1",
-    "mysql": "^2.18.1",
-    "sqlite3": "^5.0.0"
+    "lodash-id": "^0.14.0",
+    "lowdb": "^1.0.0"
   }
 }

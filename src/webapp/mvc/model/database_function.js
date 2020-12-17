@@ -1,25 +1,84 @@
-//Error Sqlite3
-//si je require 2 fois sqlite 3 = error page blanche dés que je require
-//le truc j'ai reussi a pseudo regler en forcant le db.close dans l'index
-//mais de base j'ai l'impression que ça close pas la database du coup je met 2 db.close pour clore la databases
-//mais ça me met une error dans la console
-//je ne sais pas comment regler ça car : j'ai limpression que si je met pas 2 fois db.close la connection database ne se close pas et d'une autre part dés que je require sqlite3 j'a iune page blanche sans aucun message error et j'ai aucun moyen de savoir
+//register.html -> generate key and encrypt it from hash password users
+function init_key_password_user(hash_password){
+  //require lib
+  const algorithm = 'aes-256-cbc';
+  var crypt = require('crypto');
+  var db_config = require('../../../server/database_config.js');
 
+  var insert_password_string = '';
+
+  const iv = crypt.randomBytes(16);
+  const key_bytes = crypt.randomBytes(32);
+
+  // insert_password_string = generatePassword();
+  insert_password_string = key_bytes
+  insert_password_string = insert_password_string
+
+  let hash_key_sha = crypt.createHash('sha256').update(String(hash_password)).digest('base64').substr(0, 32);
+
+  //encrypt password
+  let cipher = crypt.createCipheriv('aes-256-cbc', hash_key_sha, iv);
+  let encrypted = cipher.update(insert_password_string);
+  encrypted= Buffer.concat([encrypted, cipher.final()]);
+
+  var result = {
+    iv: iv.toString('hex'),
+    encryptedData: encrypted.toString('hex')
+  };
+
+  //get result
+  var result_iv = result.iv;
+  var result_encrypted = result.encryptedData;
+
+  return [result_iv, result_encrypted]
+}
+
+//decrypt key password user
+function decrypt_key_password_user(key,iv,encrypted_password){
+  //require lib
+  const algorithm = 'aes-256-cbc';
+  var crypt = require('crypto');
+
+  var iv_string = String(iv);
+  var key_string = String(key);
+  var encrypted_password_string = String(encrypted_password);
+
+  //decrypt aes password
+  let iv2 = Buffer.from(iv_string,'hex');
+  let encryptedText = Buffer.from(encrypted_password_string, 'hex');
+  let decipher = crypt.createDecipheriv('aes-256-cbc', key_string, iv2);
+  let decrypted = decipher.update(encryptedText);
+  decrypted = Buffer.concat([decrypted, decipher.final()]);
+
+  return decrypted
+}
+
+
+//register.html -> registration
 function insert_user(form_user, form_password) {
-
   //require lib
   var bcrypt = require('bcryptjs');
   var db_config = require('../../../server/database_config.js');
   const remote = require('electron').remote;
+  const low = require('lowdb')
+  const FileSync = require('../../../../node_modules/lowdb/adapters/FileSync.js')
+  const lodashId = require('lodash-id')
 
-  //import sqlite3
-  var sqlite3 = require('sqlite3').verbose();
-
-  //get sqlite3 db path
+  //get db path
   var db_path = db_config.db_path;
 
-  //create sqlite3 database if not exist
-  var db = new sqlite3.Database(db_path);
+  //lowdb init db config
+  const adapter = new FileSync(db_path)
+  const db = low(adapter)
+  db._.mixin(lodashId)
+
+  //init db schema and get users schema
+  const collection = db
+    .defaults({
+      users: [],
+      passwords: []
+    })
+    .get('users')
 
   //format date to string
   var today = new Date();
@@ -40,113 +99,149 @@ function insert_user(form_user, form_password) {
   //format hash password to string
   var form_password_string_hash = String(form_password_hash);
 
-  let sql = "INSERT INTO users(username,user_password,date_user) VALUES (?,?,?) "
-  db.all(sql, [form_user_string_replace, form_password_string_hash, date_string], (err, rows) => {
-    if (err) {
-      alert(err);
-      return;
-    }
+  var result_iv_and_encrypted_psswd = init_key_password_user(form_password_string);
+  var result_iv = result_iv_and_encrypted_psswd[0];
+  var result_encrypted_psswd = result_iv_and_encrypted_psswd[1];
+
+  //check if user exist -> if true -> do not insert user
+  var user_exist = db.get('users').find({
+    'username': form_user_string_replace
+  }).value()
+  if (user_exist) {
+    remote.dialog.showMessageBox({
+      type: 'info',
+      title: 'Attention !',
+      message: 'User already registered !',
+      buttons: ['Ok \!']
+    });
+    return;
+  }
+
+  //insert user in db
+  const insert_user_db = collection
+    .insert({
+      username: form_user_string_replace,
+      user_password: form_password_string_hash,
+      date: date_string,
+      iv: result_iv,
+      encrypted_psswd: result_encrypted_psswd
+    })
+    .write()
+
+  //test user's insertion
+  if (insert_user_db) {
+
     remote.dialog.showMessageBox({
       type: 'info',
       title: 'Attention !',
       message: 'Registration done',
       buttons: ['Ok \!']
     });
-    db.close();
     window.location.href = "index.html";
+  } else {
+    alert("Error Insert User in Database")
+  }
 
-  });
-
-  db.close();
-
+  //end insert_user function
 }
 
 //Login : check user exist from index.html
 function check_user_exist(form_user, form_password) {
-
   //require lib
   var bcrypt = require('bcryptjs');
   var db_config = require('../../../server/database_config.js');
   const remote = require('electron').remote;
-  var sqlite3 = require('sqlite3').verbose();
+  const low = require('lowdb')
+  const FileSync = require('../../../../node_modules/lowdb/adapters/FileSync.js')
+  const lodashId = require('lodash-id')
+  var crypt = require('crypto');
 
-  //get sqlite3 db path
+  //get db path
   var db_path = db_config.db_path;
 
-  //create sqlite3 database if not exist
-  var db = new sqlite3.Database(db_path);
+  //lowdb init db config
+  const adapter = new FileSync(db_path)
+  const db = low(adapter)
 
   //format user and password to string
   var form_user_string = String(form_user);
   var form_password_string = String(form_password);
 
+  //get hash from pass
+  var hash_key_sha = crypt.createHash('sha256').update(String(form_password_string)).digest('base64').substr(0, 32);
+
+  //session storage
+  sessionStorage.setItem('key', hash_key_sha);
+  let data = sessionStorage.getItem('key');
+
   //replace special charactere
   var form_user_string_replace = form_user_string.replace(/[^a-zA-Z0-9]/g, '');
 
+  //check if user exist -> if true -> do not insert user
+  var user_exist = db.get('users').find({
+    'username': form_user_string_replace
+  }).value();
 
-  //search user in database
-  var select_users_table = "SELECT id_user,username, user_password from users where username=?";
+  //test user exist
+  if (user_exist) {
 
+    //and get some value from user
+    var get_user_id = user_exist.id;
+    var get_user_username = user_exist.username;
+    var get_user_password = user_exist.user_password;
+    var form_password_dehash = bcrypt.compareSync(form_password_string, get_user_password);
 
-  db.all(select_users_table, [form_user_string_replace], (err, rows) => {
-    if (err) {
-      alert(err);
-      return;
-    }
-
-    rows.forEach((row) => {
-      //verify password
-      var form_password_dehash = bcrypt.compareSync(form_password_string, row.user_password);
-      console.log("Users exist !");
-      //if user exist and verify password is true redirect to main.html
-      if (row.username == form_user_string_replace && form_password_dehash == true) {
-        var user_id = row.id_user;
-
-        const cookie = {
-          url: 'http://ulrichthekeeper.com',
-          name: form_user_string_replace,
-          value: String(row.id_user)
-        }
-        remote.session.defaultSession.cookies.set(cookie)
-          .then(() => {
-            // succès
-            console.log("success OK ")
-          }, (erreur) => {
-            console.error(erreur)
-          })
-        db.close();
-
-        window.location.href = "main.html";
+    if (get_user_username == form_user_string_replace && form_password_dehash == true) {
+      //init cookie config
+      const cookie = {
+        url: 'http://ulrichthekeeper.com',
+        name: form_user_string_replace,
+        value: String(get_user_id)
       }
-      db.close();
-
+      //create cookie
+      remote.session.defaultSession.cookies.set(cookie)
+        .then(() => {
+          // succès
+          console.log("success OK ")
+        }, (erreur) => {
+          console.error(erreur)
+        })
+      window.location.href = "main.html";
+    }
+  } else {
+    //if user not exist get message
+    remote.dialog.showMessageBox({
+      type: 'info',
+      title: 'Attention !',
+      message: 'Wrong Login or Password !',
+      buttons: ['Ok \!']
     });
+    return;
+  }
 
-
-
-  });
-
-
+  //end check_user_exist function
 }
-
 
 //search data in database come from main.html
 function search_data() {
   //require lib
-  // var mysql = require('mysql');
   var db_config = require('../../../server/database_config.js');
   const remote = require('electron').remote;
   const algorithm = 'aes-256-cbc';
   var crypt = require('crypto');
-  var sqlite3 = require('sqlite3').verbose();
+  const low = require('lowdb')
+  const FileSync = require('../../../../node_modules/lowdb/adapters/FileSync.js')
+  const lodashId = require('lodash-id')
 
   //get sqlite3 db path
   var db_path = db_config.db_path;
 
-  //create sqlite3 database if not exist
-  var db = new sqlite3.Database(db_path);
+  //lowdb init db config
+  const adapter = new FileSync(db_path)
+  const db = low(adapter)
   var result_table_array = [];
   let table = "";
+
   // get cookies
   remote.session.defaultSession.cookies.get({
       url: 'http://ulrichthekeeper.com'
@@ -154,142 +249,149 @@ function search_data() {
     .then((cookies) => {
       //here
       var cookie_user = cookies[0].name;
-      console.log(cookies[0].name)
 
-      //search organisation with cookie in database
-      var select_users_table = "SELECT passwords.organisation, passwords.email, passwords.date_password, passwords.hash_password, passwords.key_password, passwords.iv FROM users INNER JOIN passwords ON users.id_user = passwords.id_user_fk WHERE users.username=?";
+      //get some value from database
+      var get_cookie_user_id = cookies[0].value;
+
+      //get hash key local storage
+      var data_key = sessionStorage.getItem('key');
+
+      //get user iv
+      var get_user_iv = db.get('users').filter({
+        'id': get_cookie_user_id
+      }).map('iv').value();
+
+      //get user encrypted psswd
+      var get_user_encrypted_psswd = db.get('users').filter({
+        'id': get_cookie_user_id
+      }).map('encrypted_psswd').value();
+
+      var decrypted_password = decrypt_key_password_user(data_key,get_user_iv,get_user_encrypted_psswd)
+
+      var get_user_organisation = db.get('passwords').filter({
+        'id': get_cookie_user_id
+      }).map('organisation').value();
+      var get_user_email = db.get('passwords').filter({
+        'id': get_cookie_user_id
+      }).map('email').value();
+      var get_user_hash_password = db.get('passwords').filter({
+        'id': get_cookie_user_id
+      }).map('hash_password').value();
+      var get_user_date_password = db.get('passwords').filter({
+        'id': get_cookie_user_id
+      }).map('date_password').value();
+      var get_user_iv = db.get('passwords').filter({
+        'id': get_cookie_user_id
+      }).map('iv').value();
+      var get_user_key_password = db.get('passwords').filter({
+        'id': get_cookie_user_id
+      }).map('key_password').value();
 
       let result_string = 'Organisation: ';
 
+      //i for loop
+      var i;
 
-      db.all(select_users_table, [cookie_user], (err, rows) => {
-        if (err) {
-          alert(err);
-          return;
-        }
+      //loop for decrypt password and create data table
+      for (i = 0; i < get_user_organisation.length; i++) {
+        let iv2 = Buffer.from(get_user_iv[i], 'hex');
+        let encryptedText = Buffer.from(get_user_hash_password[i], 'hex');
+        let decipher = crypt.createDecipheriv('aes-256-cbc', decrypted_password, iv2);
+        let decrypted = decipher.update(encryptedText);
+        decrypted = Buffer.concat([decrypted, decipher.final()]);
+        result_string = result_string + " " + get_user_organisation[i] + " ; ";
 
+        table += get_user_organisation[i] + ',' + get_user_email[i] + ',' + decrypted.toString() + ',' + get_user_date_password[i] + ',';
+      }
 
+      //cast string to array
+      table = table.split(',');
+      while (table[0]) {
+        result_table_array.push(table.splice(0, 4));
+      }
 
+      //push organisation in DOM
+      document.getElementById("organisation").innerHTML = result_string;
 
-        rows.forEach((row) => {
-          let iv2 = Buffer.from(row.iv, 'hex');
-          let encryptedText = Buffer.from(row.hash_password, 'hex');
-          let decipher = crypt.createDecipheriv('aes-256-cbc', Buffer.from(row.key_password, 'hex'), iv2);
-          let decrypted = decipher.update(encryptedText);
-          decrypted = Buffer.concat([decrypted, decipher.final()]);
-          result_string = result_string + " " + row.organisation + " ; ";
+      //init and create datatables
+      $(document).ready(function() {
+        $('#table_id').DataTable({
+          data: result_table_array,
+          destroy: true,
 
-          table += row.organisation + ',' + row.email + ',' + decrypted.toString() + ',' + row.date_password + ',';
+          columns: [{
+              name: 'organisation',
+              title: "Organisation",
+              targets: 0
+            },
+            {
+              name: 'email',
+              title: "Email",
+              targets: 1
 
-        });
-
-        table = table.split(',');
-        while (table[0]) {
-          result_table_array.push(table.splice(0, 4));
-        }
-        document.getElementById("organisation").innerHTML = result_string;
-
-
-        $(document).ready(function() {
-          $('#table_id').DataTable({
-            data: result_table_array,
-            destroy: true,
-
-
-                columns: [{
-                name:'organisation',
-                title: "Organisation",
-                targets: 0
-              },
-              {
-                name:'email',
-                title: "Email",
-                targets: 1
-
-              },
-              {
-                name:'password',
-                title: "Password",
-                visible : false,
-                targets: 2
+            },
+            {
+              name: 'password',
+              title: "Password",
+              visible: false,
+              targets: 2
 
 
-              },
-              {
-                name:'date',
-                title: "Date",
-                targets: 3
-              }
-
-            ]
-
-
-            // ,
-            // "columnDefs": [{
-            //   "targets": [0],
-            //   "visible": true,
-            //   "searchable": false,
-            //   "className": 'select-checkbox',
-            // }]
-
-          });
-
-          //insert click listener here
-          var table_select = $('#table_id').DataTable();
-          $('#table_id tbody').on('click', 'tr', function(e) {
-
-            //show or hide column
-            // var column = table_select.column( [2] );
-            // column.visible( ! column.visible() );
-
-            //show or hide row value select by click
-            table_select.rows().every(function() {
-              this.child('Your password : ' + this.data()[2]);
-            });
-            var child = table_select.row(this).child;
-            if (child.isShown()) {
-              child.hide();
-            } else {
-              child.show();
+            },
+            {
+              name: 'date',
+              title: "Date",
+              targets: 3
             }
 
-          });
-
-
-
+          ]
 
         });
 
+        //insert click listener here
+        var table_select = $('#table_id').DataTable();
+        $('#table_id tbody').on('click', 'tr', function(e) {
+
+          //show or hide row value select by click
+          table_select.rows().every(function() {
+            this.child('Your password : ' + this.data()[2]);
+          });
+          var child = table_select.row(this).child;
+          if (child.isShown()) {
+            child.hide();
+          } else {
+            child.show();
+          }
+
+        });
+
+        //end documentReady
       });
 
-
-    }).catch((erreur) => {
+      //end success get cookie
+    }).catch((error) => {
       console.log(error)
-
     })
 
-
+  //end search_password function
 }
 
-
-
-
 function input_password(insert_email, insert_organisation, insert_password) {
-
   //require lib
   var crypt = require('crypto');
   const algorithm = 'aes-256-cbc';
   var db_config = require('../../../server/database_config.js');
-  const remote = require('electron').remote;
+  const remote = require('electron').remote
+  const low = require('lowdb')
+  const FileSync = require('../../../../node_modules/lowdb/adapters/FileSync.js')
+  const lodashId = require('lodash-id')
 
-  //import sqlite3
-  var sqlite3 = require('sqlite3').verbose();
-
-  //get sqlite3 db path
+  //get db path
   var db_path = db_config.db_path;
 
-  //create sqlite3 database if not exist
-  var db = new sqlite3.Database(db_path);
+  //lowdb init db config
+  const adapter = new FileSync(db_path)
+  const db = low(adapter)
 
   //cast form element
   var insert_email_string = String(insert_email);
@@ -301,19 +403,36 @@ function input_password(insert_email, insert_organisation, insert_password) {
       url: 'http://ulrichthekeeper.com'
     })
     .then((cookies) => {
-      var cookie_user_id = Number(cookies[0].value);
-
-      console.log(cookies[0].name)
+      // var cookie_user_id = Number(cookies[0].value);
+      var cookie_user_id = cookies[0].value;
 
       //format date to string
       var today = new Date();
       var date = today.getDate() + '-' + (today.getMonth() + 1) + '-' + today.getFullYear()
       var date_string = String(date);
 
-      const key = crypt.randomBytes(32);
+      //get hash key local storage
+      var data_key = sessionStorage.getItem('key');
+
+      //get user iv
+      var get_user_iv = db.get('users').filter({
+        'id': cookie_user_id
+      }).map('iv').value();
+
+      //get user encrypted psswd
+      var get_user_encrypted_psswd = db.get('users').filter({
+        'id': cookie_user_id
+      }).map('encrypted_psswd').value();
+
+      var decrypted_password = decrypt_key_password_user(data_key,get_user_iv,get_user_encrypted_psswd)
+
+      //random key and iv
+      // const key = crypt.randomBytes(32);
       const iv = crypt.randomBytes(16);
 
-      let cipher = crypt.createCipheriv('aes-256-cbc', Buffer.from(key), iv);
+      //encrypt password
+      let cipher = crypt.createCipheriv('aes-256-cbc', decrypted_password, iv);
+
       let encrypted = cipher.update(insert_password_string);
       encrypted = Buffer.concat([encrypted, cipher.final()]);
 
@@ -321,66 +440,76 @@ function input_password(insert_email, insert_organisation, insert_password) {
         iv: iv.toString('hex'),
         encryptedData: encrypted.toString('hex')
       };
+
+      //get result
       var result_iv = result.iv;
       var result_encrypted = result.encryptedData;
-      var result_key = key.toString('hex');
 
+      //insert password in db
+      const insert_user_db = db
+        .get('passwords')
+        .push({
+          email: insert_email_string,
+          organisation: insert_organisation_string,
+          hash_password: result_encrypted,
+          iv: result_iv,
+          date_password: date_string,
+          id: cookie_user_id
+        })
+        .write()
 
-      //insert query in database
-      var insert_password_table = "INSERT INTO passwords (email,organisation,hash_password,key_password,iv,date_password,id_user_fk) values (?,?,?,?,?,?,?)";
-      var value_passwords_table = [insert_email_string, insert_organisation_string, result_encrypted, result_key, result_iv, date_string, cookie_user_id];
-
-      db.all(insert_password_table, value_passwords_table, (err, rows) => {
-        if (err) {
-          alert(err);
-          return;
-        }
+      //test password's insertion
+      if (insert_user_db) {
         remote.dialog.showMessageBox({
           type: 'info',
           title: 'Attention !',
           message: 'Input password successful \! ',
           buttons: ['Ok \!']
         });
+      }
 
-      });
-
-    }).catch((erreur) => {
+    }).catch((error) => {
       console.log(error)
     })
+
+  //end input_password function
 }
 
 function generate_password(insert_email, insert_organisation) {
-
   //require lib
-  //import sqlite3
-  var sqlite3 = require('sqlite3').verbose();
   var crypt = require('crypto');
   const algorithm = 'aes-256-cbc';
   var db_config = require('../../../server/database_config.js');
   const remote = require('electron').remote;
   var min_pass = db_config.min_generate;
   var max_pass = db_config.max_generate;
+  const low = require('lowdb')
+  const FileSync = require('../../../../node_modules/lowdb/adapters/FileSync.js')
+  const lodashId = require('lodash-id')
 
+  //random length password function
   function getRandomIntInclusive(min, max) {
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min + 1)) + min; //The maximum is inclusive and the minimum is inclusive
   }
 
+  //get random length password
   var length_password = getRandomIntInclusive(min_pass, max_pass)
 
-
-  //get sqlite3 db path
+  //get db path
   var db_path = db_config.db_path;
 
-  //create sqlite3 database if not exist
-  var db = new sqlite3.Database(db_path);
+  //lowdb init db config
+  const adapter = new FileSync(db_path)
+  const db = low(adapter)
 
   //cast form element
   var insert_email_string = String(insert_email);
   var insert_organisation_string = String(insert_organisation);
   var insert_password_string = '';
 
+  //generate password
   const generatePassword = (
       length = length_password,
       wishlist = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz()&[]=^*~!@-#$'
@@ -396,19 +525,34 @@ function generate_password(insert_email, insert_organisation) {
       url: 'http://ulrichthekeeper.com'
     })
     .then((cookies) => {
-      var cookie_user_id = Number(cookies[0].value);
-
-      console.log(cookies[0].name)
+      var cookie_user_id = cookies[0].value;
 
       //format date to string
       var today = new Date();
       var date = today.getDate() + '-' + (today.getMonth() + 1) + '-' + today.getFullYear()
       var date_string = String(date);
 
-      const key = crypt.randomBytes(32);
+      //get hash key local storage
+      var data_key = sessionStorage.getItem('key');
+
+      //get user iv
+      var get_user_iv = db.get('users').filter({
+        'id': cookie_user_id
+        }).map('iv').value();
+
+      //get user encrypted psswd
+      var get_user_encrypted_psswd = db.get('users').filter({
+        'id': cookie_user_id
+        }).map('encrypted_psswd').value();
+
+      var decrypted_password = decrypt_key_password_user(data_key,get_user_iv,get_user_encrypted_psswd)
+
+      //get random key and iv
+      // const key = crypt.randomBytes(32);
       const iv = crypt.randomBytes(16);
 
-      let cipher = crypt.createCipheriv('aes-256-cbc', Buffer.from(key), iv);
+      //encrypt password
+      let cipher = crypt.createCipheriv('aes-256-cbc', decrypted_password, iv);
       let encrypted = cipher.update(insert_password_string);
       encrypted = Buffer.concat([encrypted, cipher.final()]);
 
@@ -416,31 +560,37 @@ function generate_password(insert_email, insert_organisation) {
         iv: iv.toString('hex'),
         encryptedData: encrypted.toString('hex')
       };
+
+      //get result
       var result_iv = result.iv;
       var result_encrypted = result.encryptedData;
-      var result_key = key.toString('hex');
 
-      //insert query in database
-      var insert_password_table = "INSERT INTO passwords (email,organisation,hash_password,key_password,iv,date_password,id_user_fk) values (?,?,?,?,?,?,?)";
-      var value_passwords_table = [insert_email_string, insert_organisation_string, result_encrypted, result_key, result_iv, date_string, cookie_user_id];
+      //insert password in db
+      const insert_user_db = db
+        .get('passwords')
+        .push({
+          email: insert_email_string,
+          organisation: insert_organisation_string,
+          hash_password: result_encrypted,
+          iv: result_iv,
+          date_password: date_string,
+          id: cookie_user_id
+        })
+        .write()
 
-      db.all(insert_password_table, value_passwords_table, (err, rows) => {
-        if (err) {
-          alert(err);
-          return;
-        }
+      //test password's insertion
+      if (insert_user_db) {
         remote.dialog.showMessageBox({
           type: 'info',
           title: 'Attention !',
-          message: 'Insert password successful \! ',
+          message: 'Input password successful \! ',
           buttons: ['Ok \!']
         });
+      }
 
-      });
-
-    }).catch((erreur) => {
+    }).catch((error) => {
       console.log(error)
     })
 
-
+  //end generate_password function
 }
