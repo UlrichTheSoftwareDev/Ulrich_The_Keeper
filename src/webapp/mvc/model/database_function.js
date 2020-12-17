@@ -1,37 +1,18 @@
 //register.html -> generate key and encrypt it from hash password users
 function init_key_password_user(hash_password){
-
   //require lib
   const algorithm = 'aes-256-cbc';
   var crypt = require('crypto');
   var db_config = require('../../../server/database_config.js');
-  var min_pass = db_config.min_generate;
-  var max_pass = db_config.max_generate;
-
-  //random length password function
-  function getRandomIntInclusive(min, max) {
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min + 1)) + min; //The maximum is inclusive and the minimum is inclusive
-  }
 
   var insert_password_string = '';
 
-  //get random length password
-  var length_password = getRandomIntInclusive(min_pass, max_pass)
-
-  //generate password
-  const generatePassword = (
-      length = length_password,
-      wishlist = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz()&[]=^*~!@-#$'
-    ) =>
-    Array.from(crypt.randomFillSync(new Uint32Array(length)))
-    .map((x) => wishlist[x % wishlist.length])
-    .join('')
-
   const iv = crypt.randomBytes(16);
+  const key_bytes = crypt.randomBytes(32);
 
-  insert_password_string = generatePassword();
+  // insert_password_string = generatePassword();
+  insert_password_string = key_bytes
+  insert_password_string = insert_password_string
 
   let hash_key_sha = crypt.createHash('sha256').update(String(hash_password)).digest('base64').substr(0, 32);
 
@@ -48,14 +29,6 @@ function init_key_password_user(hash_password){
   //get result
   var result_iv = result.iv;
   var result_encrypted = result.encryptedData;
-
-  //decrypt aes password
-  let iv2 = Buffer.from(result_iv, 'hex');
-  let encryptedText = Buffer.from(result_encrypted, 'hex');
-  let decipher = crypt.createDecipheriv('aes-256-cbc', hash_key_sha, iv2);
-  let decrypted = decipher.update(encryptedText);
-  decrypted = Buffer.concat([decrypted, decipher.final()]);
-  var ok = decrypted.toString();
 
   return [result_iv, result_encrypted]
 }
@@ -76,7 +49,8 @@ function decrypt_key_password_user(key,iv,encrypted_password){
   let decipher = crypt.createDecipheriv('aes-256-cbc', key_string, iv2);
   let decrypted = decipher.update(encryptedText);
   decrypted = Buffer.concat([decrypted, decipher.final()]);
-  return decrypted.toString()
+
+  return decrypted
 }
 
 
@@ -275,10 +249,24 @@ function search_data() {
     .then((cookies) => {
       //here
       var cookie_user = cookies[0].name;
-      console.log(cookies[0].name)
 
       //get some value from database
       var get_cookie_user_id = cookies[0].value;
+
+      //get hash key local storage
+      var data_key = sessionStorage.getItem('key');
+
+      //get user iv
+      var get_user_iv = db.get('users').filter({
+        'id': get_cookie_user_id
+      }).map('iv').value();
+
+      //get user encrypted psswd
+      var get_user_encrypted_psswd = db.get('users').filter({
+        'id': get_cookie_user_id
+      }).map('encrypted_psswd').value();
+
+      var decrypted_password = decrypt_key_password_user(data_key,get_user_iv,get_user_encrypted_psswd)
 
       var get_user_organisation = db.get('passwords').filter({
         'id': get_cookie_user_id
@@ -308,7 +296,7 @@ function search_data() {
       for (i = 0; i < get_user_organisation.length; i++) {
         let iv2 = Buffer.from(get_user_iv[i], 'hex');
         let encryptedText = Buffer.from(get_user_hash_password[i], 'hex');
-        let decipher = crypt.createDecipheriv('aes-256-cbc', Buffer.from(get_user_key_password[i], 'hex'), iv2);
+        let decipher = crypt.createDecipheriv('aes-256-cbc', decrypted_password, iv2);
         let decrypted = decipher.update(encryptedText);
         decrypted = Buffer.concat([decrypted, decipher.final()]);
         result_string = result_string + " " + get_user_organisation[i] + " ; ";
@@ -381,15 +369,12 @@ function search_data() {
       });
 
       //end success get cookie
-    }).catch((erreur) => {
+    }).catch((error) => {
       console.log(error)
     })
 
   //end search_password function
 }
-
-
-
 
 function input_password(insert_email, insert_organisation, insert_password) {
   //require lib
@@ -420,8 +405,6 @@ function input_password(insert_email, insert_organisation, insert_password) {
     .then((cookies) => {
       // var cookie_user_id = Number(cookies[0].value);
       var cookie_user_id = cookies[0].value;
-
-      console.log(cookies[0].name)
 
       //format date to string
       var today = new Date();
@@ -461,7 +444,6 @@ function input_password(insert_email, insert_organisation, insert_password) {
       //get result
       var result_iv = result.iv;
       var result_encrypted = result.encryptedData;
-      var result_key = key.toString('hex');
 
       //insert password in db
       const insert_user_db = db
@@ -470,7 +452,6 @@ function input_password(insert_email, insert_organisation, insert_password) {
           email: insert_email_string,
           organisation: insert_organisation_string,
           hash_password: result_encrypted,
-          key_password: result_key,
           iv: result_iv,
           date_password: date_string,
           id: cookie_user_id
@@ -546,19 +527,32 @@ function generate_password(insert_email, insert_organisation) {
     .then((cookies) => {
       var cookie_user_id = cookies[0].value;
 
-      console.log(cookies[0].name)
-
       //format date to string
       var today = new Date();
       var date = today.getDate() + '-' + (today.getMonth() + 1) + '-' + today.getFullYear()
       var date_string = String(date);
 
+      //get hash key local storage
+      var data_key = sessionStorage.getItem('key');
+
+      //get user iv
+      var get_user_iv = db.get('users').filter({
+        'id': cookie_user_id
+        }).map('iv').value();
+
+      //get user encrypted psswd
+      var get_user_encrypted_psswd = db.get('users').filter({
+        'id': cookie_user_id
+        }).map('encrypted_psswd').value();
+
+      var decrypted_password = decrypt_key_password_user(data_key,get_user_iv,get_user_encrypted_psswd)
+
       //get random key and iv
-      const key = crypt.randomBytes(32);
+      // const key = crypt.randomBytes(32);
       const iv = crypt.randomBytes(16);
 
       //encrypt password
-      let cipher = crypt.createCipheriv('aes-256-cbc', Buffer.from(key), iv);
+      let cipher = crypt.createCipheriv('aes-256-cbc', decrypted_password, iv);
       let encrypted = cipher.update(insert_password_string);
       encrypted = Buffer.concat([encrypted, cipher.final()]);
 
@@ -570,7 +564,6 @@ function generate_password(insert_email, insert_organisation) {
       //get result
       var result_iv = result.iv;
       var result_encrypted = result.encryptedData;
-      var result_key = key.toString('hex');
 
       //insert password in db
       const insert_user_db = db
@@ -579,7 +572,6 @@ function generate_password(insert_email, insert_organisation) {
           email: insert_email_string,
           organisation: insert_organisation_string,
           hash_password: result_encrypted,
-          key_password: result_key,
           iv: result_iv,
           date_password: date_string,
           id: cookie_user_id
