@@ -7,7 +7,7 @@ Ulrich The Keeper is a lightweight multi-users desktop password manager made wit
 
 You can view, generate and input password.
 
-Made with NodeJs, ElectronJs, HTML, CSS, Bootstrap, Javascript, JQuery and Sqlite3.
+Made with NodeJs, ElectronJs, HTML, CSS, Bootstrap, Javascript, JQuery and Lowdb.
 
 ## Getting Started
 
