@@ -9,6 +9,20 @@ You can view, generate and input password.
 
 Made with NodeJs, ElectronJs, HTML, CSS, Bootstrap, Javascript, JQuery and Lowdb.
 
+## Ulrich In action 
+
+Login page -> 
+
+<img src="src/webapp/public/assets/img/login_view.PNG" />
+
+Main page -> Click on the line to show your password ! 
+
+<img src="src/webapp/public/assets/img/search_view.PNG" />
+
+## How It works ?
+
+<img src="src/webapp/public/assets/img/ulrich_the_keeper_crypto_algo.png" />
+
 ## Getting Started
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
