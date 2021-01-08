@@ -14,7 +14,7 @@ function createWindow () {
       //enable remote module for the render script
       enableRemoteModule: true,
       //disable dev tools set to false in PROD
-      devTools: true
+      devTools: false
 
 
     }
@@ -30,7 +30,7 @@ function createWindow () {
    })
 
   //remove menubar from electron app : uncomment in PROD
-  //win.removeMenu();
+  win.removeMenu();
 
   // open  DevTools.
   //win.webContents.openDevTools()
