@@ -17,14 +17,18 @@
   <div class="login-dark">
     <form id="myForm_register" method="POST" oninput='password_check.setCustomValidity(password_check.value != password.value ? "Passwords do not match." : "")'>
       <h2 class="sr-only">Register Form</h2>
-      <div class="illustration"><i class="icon ion-ios-locked-outline"></i></div>
+      <div class="illustration"><i class="icon ion-ios-locked-outline"></i>
+        <a class="forgot">At least 15 characters -> 1 lower case, 1 upper case, 1 special character, 1 number</a>
+
+      </div>
+
       <div class="form-group"><input id=login class="form-control" type="text" name="login" placeholder="Login" required></div>
       <div class="form-group"><input id=password class="form-control" type="password" name="password" placeholder="Your Password" aria-describedby="PasswordHelp" required
           title="Must contain at least one number and one uppercase and lowercase letter, and at least 12 or more characters"></div>
       <div class="form-group"><input id=password_check class="form-control" type="password" name="password_check" placeholder="Check Password" aria-describedby="PasswordHelp" required></div>
 
       <div class="form-group">
-        <button id=myBtn class="btn btn-primary btn-block" type="button">Log In</button>
+        <button id=myBtn class="btn btn-primary btn-block" type="button">Register</button>
       </div>
       <a href="index.html" class="forgot">Already registered ? Click here for back to Login page </a>
 
