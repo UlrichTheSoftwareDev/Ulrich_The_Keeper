@@ -4,6 +4,10 @@ function createWindow () {
   // create window
   const win = new BrowserWindow({
     width: 800,
+    minWidth: 800,
+    maxWidth: 1600,
+    minHeight:600,
+    maxHeight:1200,
     height: 600,
     title: "Ulrich The Keeper",
     icon: './src/webapp/public/assets/img/menu_icon.png',
