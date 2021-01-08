@@ -117,14 +117,14 @@ cd /UTK_password_manager/
 
 npm install electron-packager -g
 
-electron-packager . electron-tutorial-app --overwrite --asar=true --platform=win32 --arch=x64 --icon=src/webapp/public/assets/img/ico_app.ico --prune=true --out=release-builds --version-string.CompanyName=CE --version-string.FileDescription=CE --version-string.ProductName="Electron Tutorial App"
+electron-packager . ulrich_the_keeper --overwrite --asar=true --platform=win32 --arch=x64 --icon=src/webapp/public/assets/img/ico_app.ico --prune=true --out=release-builds --version-string.CompanyName=CE --version-string.FileDescription=CE --version-string.ProductName="Ulrich The Keeper"
 
 #DO NOT DELETE /src folder
 #you need to keep /src/webapp/databases/ folder and /src/webapp/public/assets/ folder
 #you can delete anything else
 #you must launch app under Ulrich_The_Keeper/ folder like below
 
-./release-builds/ulrich_the_keeper
+./release-builds/ulrich_the_keeper-win32-x64
 
 ```
 
