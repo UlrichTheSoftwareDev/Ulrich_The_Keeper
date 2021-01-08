@@ -9,13 +9,13 @@ You can view, generate and input password.
 
 Made with NodeJs, ElectronJs, HTML, CSS, Bootstrap, Javascript, JQuery and Lowdb.
 
-## Ulrich In action 
+## Ulrich In action
 
-Login page -> 
+Login page ->
 
 <img src="src/webapp/public/assets/img/login_view.PNG" />
 
-Main page -> Click on the line to show your password ! 
+Main page -> Click on the line to show your password !
 
 <img src="src/webapp/public/assets/img/search_view.PNG" />
 
@@ -110,7 +110,7 @@ electron-packager . ulrich_the_keeper --overwrite --asar=true --platform=linux -
 
 **If we package this app from Linux to Windows we need to install wine first.**
 
-* Example with Windows arch 64
+* Example with Windows arch 64 : Open PowerShell
 
 ```
 cd /UTK_password_manager/
