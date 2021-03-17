@@ -1,7 +1,6 @@
 # DOCUMENTATION <img src="src/webapp/public/assets/img/main_icon.png" width=50 />
 
 ![GitHub last commit](https://img.shields.io/github/last-commit/UlrichTheSoftwareDev/Ulrich_The_Keeper) [![Node CI](https://github.com/UlrichTheSoftwareDev/Ulrich_The_Keeper/actions/workflows/main.yml/badge.svg)](https://github.com/UlrichTheSoftwareDev/Ulrich_The_Keeper/actions/workflows/main.yml) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)![GitHub repo size](https://img.shields.io/github/repo-size/UlrichTheSoftwareDev/Ulrich_The_Keeper?style=plastic)
-
 ## About the project
 
 Ulrich The Keeper is a lightweight multi-users desktop password manager made with ElectronJs Framework.
