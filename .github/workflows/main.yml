@@ -1,4 +1,4 @@
-name: CI
+name: Node CI
 
 on: push
 
@@ -9,5 +9,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Run a one-line script
-        run: echo "Hello, world!"
+      - name: Install 🔧
+        run: npm install
+        
+      - name: PostInstall 🏗️
+        run: npm run postinstall
+
+      - name: Start 🚨
+        run: npm start
