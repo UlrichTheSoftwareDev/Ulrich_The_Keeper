@@ -15,5 +15,5 @@ jobs:
       - name: PostInstall 🏗️
         run: npm run postinstall
 
-      - name: Start 🚨
-        run: npm start
+#      - name: Start 🚨
+#        run: npm start
