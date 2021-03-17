@@ -1,5 +1,6 @@
 # DOCUMENTATION <img src="src/webapp/public/assets/img/main_icon.png" width=50 />
 
+[![Node CI](https://github.com/UlrichTheSoftwareDev/Ulrich_The_Keeper/actions/workflows/main.yml/badge.svg)](https://github.com/UlrichTheSoftwareDev/Ulrich_The_Keeper/actions/workflows/main.yml)
 
 ## About the project
 
