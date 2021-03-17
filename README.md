@@ -10,6 +10,10 @@ You can view, generate and input password.
 
 Made with NodeJs, ElectronJs, HTML, CSS, Bootstrap, Javascript, JQuery and Lowdb.
 
+## Latest News
+
+- 02/21 : Ulrich The Keeper 1.0
+
 ## Ulrich In action
 
 Login page ->
